@@ -43,26 +43,33 @@
             z-index: 1;
         }
 
-        /* もどるボタン（左上固定） */
+        /* 視認性を高めたもどるボタン（左上固定） */
         .back-button {
             position: absolute;
-            top: 25px;
+            top: 20px;
             left: 20px;
             z-index: 10;
-            background: none;
-            border: none;
-            color: var(--text-light);
-            font-size: 0.9rem;
-            font-weight: 600;
-            letter-spacing: 1.5px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid var(--glass-border);
+            color: white;
+            font-size: 0.8rem;
+            font-weight: bold;
+            letter-spacing: 2px;
             cursor: pointer;
-            padding: 5px 10px;
-            transition: opacity 0.2s ease;
+            padding: 10px 20px;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px var(--shadow);
+            transition: all 0.3s ease;
             text-transform: uppercase;
         }
 
         .back-button:hover {
-            opacity: 0.7;
+            background: white;
+            color: var(--deep-sea);
+            transform: translateX(-3px);
+            box-shadow: 0 6px 20px rgba(255, 255, 255, 0.3);
         }
 
         /* BGMコントロールエリア（右上固定） */
@@ -275,7 +282,7 @@
 </head>
 <body>
 
-<button class="back-button" onclick="goBack()">BACK</button>
+<button class="back-button" onclick="goBack()">&lt; BACK</button>
 
 <div class="audio-player">
     <label for="bgm">BGM SOUNDS</label>
@@ -328,7 +335,6 @@
     const customMinInput = document.getElementById('custom-min');
     const logList = document.getElementById('log-list');
 
-    // 前のページに戻る関数
     function goBack() {
         if (timerState === 'running') {
             if (!confirm('タイマーを終了して前のページに戻りますか？')) return;
