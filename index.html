@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ocean Study Timer</title>
+    <style>
+        :root {
+            --deep-sea: #0f2b46;
+            --ocean-blue: #1d4e77;
+            --wave-blue: #4a90e2;
+            --aqua: #7ed6df;
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.25);
+            --text-light: #f0f7f4;
+            --shadow: rgba(0, 0, 0, 0.2);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+        }
+
+        body {
+            /* 背景画像の設定 */
+            background: url('umi.png') no-repeat center center fixed;
+            background-size: cover;
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        /* 背景を少し暗くして文字の視認性をあげるオーバーレイ */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 43, 70, 0.3); /* 海の青みを残しつつ少し暗く */
+            z-index: 1;
+        }
+
+        /* オーディオコントローラー（右上固定） */
+        .audio-player {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 10;
+            background: var(--glass-bg);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid var(--glass-border);
+            padding: 10px 15px;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 15px var(--shadow);
+        }
+
+        .audio-player label {
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+
+        .audio-player audio {
+            height: 30px;
+            width: 200px;
+        }
+
+        /* メインコンテナ（ガラスデザイン） */
+        .container {
+            position: relative;
+            z-index: 2; /* オーバーレイより上に配置 */
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            width: 100%;
+            max-width: 500px;
+            border-radius: 24px;
+            padding: 35px 30px;
+            box-shadow: 0 20px 50px var(--shadow);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 1.6rem;
+            color: white;
+            margin-bottom: 25px;
+            letter-spacing: 3px;
+            font-weight: 600;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* タブ切り替え */
+        .tabs {
+            display: flex;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 5px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .tab-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            padding: 10px 5px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background-color: white;
+            color: var(--deep-sea);
+            box-shadow: 0 4px 10px var(--shadow);
+        }
+
+        /* 各種設定エリア */
+        .config-area {
+            display: none;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        .config-area.active {
+            display: block;
+        }
+
+        .config-area input {
+            width: 70px;
+            padding: 6px;
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1rem;
+            color: white;
+            background: rgba(0, 0, 0, 0.2);
+            outline: none;
+        }
+
+        /* タイマー表示部 */
+        .timer-display {
+            font-size: 4.8rem;
+            font-weight: 200;
+            color: white;
+            margin: 15px 0;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 2px;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+        .status-label {
+            font-size: 0.95rem;
+            color: var(--aqua);
+            font-weight: 600;
+            height: 24px;
+            margin-bottom: 10px;
+            letter-spacing: 1.5px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        /* コントロールボタン */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            background-color: white;
+            color: var(--deep-sea);
+            border: none;
+            padding: 12px 35px;
+            font-size: 1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            background-color: var(--sea-foam);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: white;
+            border: 2px solid white;
+            box-shadow: none;
+        }
+
+        .btn-secondary:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+            box-shadow: none;
+        }
+
+        /* 記録ログエリア */
+        .log-container {
+            border-top: 1px solid var(--glass-border);
+            padding-top: 20px;
+            text-align: left;
+        }
+
+        .log-container h3 {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+        }
+
+        .log-list {
+            list-style: none;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+        .log-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background-color: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 8px;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+        }
+
+        .log-time {
+            font-weight: bold;
+            color: var(--aqua);
+        }
+    </style>
+</head>
+<body>
+
+<div class="audio-player">
+    <label for="bgm">🎵 BGM</label>
+    <audio id="bgm" src="umi.mp3" controls loop></audio>
+</div>
+
+<div class="container">
+    <h1>OCEAN STUDY TIMER</h1>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchMode('pomodoro')">ポモドーロ</button>
+        <button class="tab-btn" onclick="switchMode('stopwatch')">ストップウォッチ</button>
+        <button class="tab-btn" onclick="switchMode('custom')">カスタム</button>
+    </div>
+
+    <div id="custom-config" class="config-area">
+        <label>タイマー設定：<input type="number" id="custom-min" value="45" min="1" max="180"> 分</label>
+    </div>
+
+    <div id="status-label" class="status-label">集中時間</div>
+
+    <div id="timer-display" class="timer-display">25:00</div>
+
+    <div class="controls">
+        <button id="start-btn" class="btn" onclick="startTimer()">START</button>
+        <button id="stop-btn" class="btn btn-secondary" onclick="stopTimer()" style="display:none;">PAUSE</button>
+        <button id="reset-btn" class="btn btn-secondary" onclick="resetTimer()">RESET</button>
+    </div>
+
+    <div class="log-container">
+        <h3>本日のログ</h3>
+        <ul id="log-list" class="log-list"></ul>
+    </div>
+</div>
+
+<script>
+    let currentMode = 'pomodoro';
+    let timerState = 'stopped';
+    let countdownMode = true;
+    let totalSeconds = 25 * 60;
+    let initialSeconds = 25 * 60;
+    let timerId = null;
+    let isPomoWorkSession = true;
+
+    const display = document.getElementById('timer-display');
+    const statusLabel = document.getElementById('status-label');
+    const startBtn = document.getElementById('start-btn');
+    const stopBtn = document.getElementById('stop-btn');
+    const customConfig = document.getElementById('custom-config');
+    const customMinInput = document.getElementById('custom-min');
+    const logList = document.getElementById('log-list');
+
+    customMinInput.addEventListener('change', () => {
+        if (currentMode === 'custom' && timerState === 'stopped') {
+            initTimer();
+        }
+    });
+
+    function switchMode(mode) {
+        if (timerState === 'running') {
+            if (!confirm('実行中のタイマーがリセットされますが、よろしいですか？')) return;
+        }
+        
+        currentMode = mode;
+        
+        document.querySelectorAll('.tab-btn').forEach((btn, index) => {
+            const modes = ['pomodoro', 'stopwatch', 'custom'];
+            btn.classList.toggle('active', modes[index] === mode);
+        });
+
+        customConfig.classList.toggle('active', mode === 'custom');
+
+        stopTimer();
+        timerState = 'stopped';
+        isPomoWorkSession = true;
+        initTimer();
+    }
+
+    function initTimer() {
+        if (currentMode === 'pomodoro') {
+            countdownMode = true;
+            statusLabel.textContent = isPomoWorkSession ? "集中時間 - Deep Blue -" : "休憩時間 - Sea Foam -";
+            totalSeconds = isPomoWorkSession ? 25 * 60 : 5 * 60;
+            initialSeconds = totalSeconds;
+        } else if (currentMode === 'stopwatch') {
+            countdownMode = false;
+            statusLabel.textContent = "計測中 - Wave -";
+            totalSeconds = 0;
+        } else if (currentMode === 'custom') {
+            countdownMode = true;
+            statusLabel.textContent = "カスタムタイマー";
+            let mins = parseInt(customMinInput.value) || 45;
+            totalSeconds = mins * 60;
+            initialSeconds = totalSeconds;
+        }
+        updateDisplay();
+        toggleButtons(false);
+    }
+
+    function updateDisplay() {
+        const mins = Math.floor(Math.abs(totalSeconds) / 60);
+        const secs = Math.floor(Math.abs(totalSeconds) % 60);
+        display.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+
+    function toggleButtons(isRunning) {
+        if (isRunning) {
+            startBtn.style.display = 'none';
+            stopBtn.style.display = 'inline-block';
+        } else {
+            startBtn.style.display = 'inline-block';
+            stopBtn.style.display = 'none';
+            startBtn.textContent = timerState === 'paused' ? 'RESUME' : 'START';
+        }
+    }
+
+    function startTimer() {
+        if (timerState === 'running') return;
+
+        timerState = 'running';
+        toggleButtons(true);
+
+        // ブラウザの仕様上、ユーザーが画面をクリックした後にしか音楽の自動再生が始まらないケースがあるため、STARTボタン連動でも再生をケア
+        const audio = document.getElementById('bgm');
+        if(audio.paused) {
+            audio.play().catch(e => console.log("Audio play blocked until user interaction."));
+        }
+
+        timerId = setInterval(() => {
+            if (countdownMode) {
+                totalSeconds--;
+                if (totalSeconds <= 0) {
+                    clearInterval(timerId);
+                    timerState = 'stopped';
+                    completeSession();
+                }
+            } else {
+                totalSeconds++;
+            }
+            updateDisplay();
+        }, 1000);
+    }
+
+    function stopTimer() {
+        if (timerId) clearInterval(timerId);
+        if (timerState === 'running') {
+            timerState = 'paused';
+        }
+        toggleButtons(false);
+    }
+
+    function resetTimer() {
+        stopTimer();
+        if (currentMode === 'stopwatch' && totalSeconds > 0) {
+            addLog("ストップウォッチ", totalSeconds);
+        }
+        timerState = 'stopped';
+        initTimer();
+    }
+
+    function completeSession() {
+        let modeName = "";
+        let recordedTime = initialSeconds;
+
+        if (currentMode === 'pomodoro') {
+            if (isPomoWorkSession) {
+                modeName = "ポモドーロ（集中）";
+                addLog(modeName, recordedTime);
+                alert("集中時間が終了しました！一休みしましょう。");
+                isPomoWorkSession = false;
+            } else {
+                alert("休憩が終了しました！次のサイクルを始めましょう。");
+                isPomoWorkSession = true;
+            }
+        } else if (currentMode === 'custom') {
+            modeName = "カスタムタイマー";
+            addLog(modeName, recordedTime);
+            alert("カスタムタイマーが終了しました！");
+        }
+
+        initTimer();
+    }
+
+    function addLog(modeName, seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        const timeStr = mins > 0 ? `${mins}分${secs}秒` : `${secs}秒`;
+        
+        const now = new Date();
+        const timeStamp = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+        const li = document.createElement('li');
+        li.className = 'log-item';
+        li.innerHTML = `<span>[${timeStamp}] ${modeName}</span> <span class="log-time">+${timeStr}</span>`;
+        
+        logList.insertBefore(li, logList.firstChild);
+    }
+
+    initTimer();
+</script>
+
+</body>
+</html>
