@@ -24,7 +24,6 @@
         }
 
         body {
-            /* 背景画像の設定 */
             background: url('umi.png') no-repeat center center fixed;
             background-size: cover;
             color: var(--text-light);
@@ -36,16 +35,15 @@
             position: relative;
         }
 
-        /* 背景を少し暗くして文字の視認性をあげるオーバーレイ */
         body::before {
             content: '';
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(15, 43, 70, 0.3); /* 海の青みを残しつつ少し暗く */
+            background: rgba(15, 43, 70, 0.3);
             z-index: 1;
         }
 
-        /* オーディオコントローラー（右上固定） */
+        /* BGMコントロールエリア */
         .audio-player {
             position: absolute;
             top: 20px;
@@ -66,6 +64,7 @@
         .audio-player label {
             font-size: 0.8rem;
             letter-spacing: 1px;
+            font-weight: 600;
         }
 
         .audio-player audio {
@@ -73,10 +72,10 @@
             width: 200px;
         }
 
-        /* メインコンテナ（ガラスデザイン） */
+        /* メインコンテナ */
         .container {
             position: relative;
-            z-index: 2; /* オーバーレイより上に配置 */
+            z-index: 2;
             background: var(--glass-bg);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
@@ -128,7 +127,7 @@
             box-shadow: 0 4px 10px var(--shadow);
         }
 
-        /* 各種設定エリア */
+        /* 設定エリア */
         .config-area {
             display: none;
             margin-bottom: 20px;
@@ -255,7 +254,7 @@
 <body>
 
 <div class="audio-player">
-    <label for="bgm">🎵 BGM</label>
+    <label for="bgm">BGM SOUNDS</label>
     <audio id="bgm" src="umi.mp3" controls loop></audio>
 </div>
 
@@ -375,7 +374,6 @@
         timerState = 'running';
         toggleButtons(true);
 
-        // ブラウザの仕様上、ユーザーが画面をクリックした後にしか音楽の自動再生が始まらないケースがあるため、STARTボタン連動でも再生をケア
         const audio = document.getElementById('bgm');
         if(audio.paused) {
             audio.play().catch(e => console.log("Audio play blocked until user interaction."));
@@ -421,16 +419,16 @@
             if (isPomoWorkSession) {
                 modeName = "ポモドーロ（集中）";
                 addLog(modeName, recordedTime);
-                alert("集中時間が終了しました！一休みしましょう。");
+                alert("集中時間が終了しました。一休みしましょう。");
                 isPomoWorkSession = false;
             } else {
-                alert("休憩が終了しました！次のサイクルを始めましょう。");
+                alert("休憩が終了しました。次のサイクルを始めましょう。");
                 isPomoWorkSession = true;
             }
         } else if (currentMode === 'custom') {
             modeName = "カスタムタイマー";
             addLog(modeName, recordedTime);
-            alert("カスタムタイマーが終了しました！");
+            alert("カスタムタイマーが終了しました。");
         }
 
         initTimer();
