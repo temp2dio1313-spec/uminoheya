@@ -43,7 +43,29 @@
             z-index: 1;
         }
 
-        /* BGMコントロールエリア */
+        /* もどるボタン（左上固定） */
+        .back-button {
+            position: absolute;
+            top: 25px;
+            left: 20px;
+            z-index: 10;
+            background: none;
+            border: none;
+            color: var(--text-light);
+            font-size: 0.9rem;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            padding: 5px 10px;
+            transition: opacity 0.2s ease;
+            text-transform: uppercase;
+        }
+
+        .back-button:hover {
+            opacity: 0.7;
+        }
+
+        /* BGMコントロールエリア（右上固定） */
         .audio-player {
             position: absolute;
             top: 20px;
@@ -253,6 +275,8 @@
 </head>
 <body>
 
+<button class="back-button" onclick="goBack()">BACK</button>
+
 <div class="audio-player">
     <label for="bgm">BGM SOUNDS</label>
     <audio id="bgm" src="umi.mp3" controls loop></audio>
@@ -303,6 +327,14 @@
     const customConfig = document.getElementById('custom-config');
     const customMinInput = document.getElementById('custom-min');
     const logList = document.getElementById('log-list');
+
+    // 前のページに戻る関数
+    function goBack() {
+        if (timerState === 'running') {
+            if (!confirm('タイマーを終了して前のページに戻りますか？')) return;
+        }
+        window.history.back();
+    }
 
     customMinInput.addEventListener('change', () => {
         if (currentMode === 'custom' && timerState === 'stopped') {
